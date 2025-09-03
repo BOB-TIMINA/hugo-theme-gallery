@@ -1,9 +1,32 @@
-{{ with site.Taxonomies.categories }}
-  <nav class="categories">
-    <ul>
-      {{ range . }}
-        <li><a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a></li>
-      {{ end }}
-    </ul>
-  </nav>
-{{ end }}
+{{/* layouts/partials/categories.html —— 保留主题样式，只自定义顺序 */}}
+
+{{- $tax := site.Taxonomies.categories -}}
+{{- $order := site.Params.categories.order | default (slice) -}}
+{{- $items := slice -}}
+
+{{- if gt (len $order) 0 -}}
+  {{- $seen := dict -}}             {{/* 去重后按配置顺序取 term */}}
+  {{- range $slug := $order -}}
+    {{- if not (index $seen $slug) -}}
+      {{- $_ := set $seen $slug true -}}
+      {{- with index $tax $slug -}}
+        {{- $items = $items | append . -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- else -}}
+  {{- range $name, $term := $tax -}}
+    {{- $items = $items | append $term -}}
+  {{- end -}}
+  {{- $items = sort $items "Page.Title" -}}
+{{- end -}}
+
+{{- if gt (len $items) 0 -}}
+<nav class="categories">
+  <ul>
+    {{- range $items -}}
+      <li><a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a></li>
+    {{- end -}}
+  </ul>
+</nav>
+{{- end -}}
