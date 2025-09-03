@@ -1,31 +1,37 @@
-{{/* categories.html —— 保留主题样式，只自定义顺序；不使用 set */}}
-
+{{/* 保留原样式，只自定义顺序；即使禁用 taxonomy 也能工作 */}}
 {{- $tax := site.Taxonomies.categories -}}
 {{- $order := site.Params.categories.order | default (slice) -}}
 {{- $items := slice -}}
 
 {{- if gt (len $order) 0 -}}
-  {{- $picked := dict -}}                   {{/* 记录已添加的 slug，避免重复 */}}
+  {{- $picked := dict -}}
   {{- range $slug := $order -}}
-    {{- if not (isset $picked $slug) -}}    {{/* isset 检查 map 是否已有该键 */}}
-      {{- with index $tax $slug -}}         {{/* 取到对应的 term */}}
-        {{- $items = $items | append . -}}  {{/* 追加 term */}}
-        {{- $picked = merge $picked (dict $slug true) -}}  {{/* 等价 set：标记已选 */}}
+    {{- if not (isset $picked $slug) -}}
+      {{- with index $tax $slug -}}
+        {{- $items = $items | append (dict
+            "slug" $slug
+            "page" .Page
+          ) -}}
+        {{- $picked = merge $picked (dict $slug true) -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
 {{- else -}}
   {{- range $name, $term := $tax -}}
-    {{- $items = $items | append $term -}}
+    {{- $items = $items | append (dict "slug" $name "page" $term.Page) -}}
   {{- end -}}
-  {{- $items = sort $items "Page.Title" -}}
+  {{- $items = sort $items "page.Title" -}}
 {{- end -}}
 
 {{- if gt (len $items) 0 -}}
 <nav class="categories">
   <ul>
-    {{- range $items -}}
-      <li><a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a></li>
+    {{- range $i := $items -}}
+      {{- $p := $i.page -}}
+      {{- $slug := $i.slug -}}
+      {{- $href := cond $p $p.RelPermalink (relURL (printf "/categories/%s/" $slug)) -}}
+      {{- $title := cond $p $p.Title (humanize $slug) -}}
+      <li><a href="{{ $href }}">{{ $title }}</a></li>
     {{- end -}}
   </ul>
 </nav>
