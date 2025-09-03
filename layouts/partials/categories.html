@@ -1,38 +1,15 @@
-{{/* 保留原样式，只自定义顺序；即使禁用 taxonomy 也能工作 */}}
+{{/* 严格按 params.categories.order 输出；不排序、不回退 */}}
 {{- $tax := site.Taxonomies.categories -}}
 {{- $order := site.Params.categories.order | default (slice) -}}
-{{- $items := slice -}}
 
 {{- if gt (len $order) 0 -}}
-  {{- $picked := dict -}}
-  {{- range $slug := $order -}}
-    {{- if not (isset $picked $slug) -}}
-      {{- with index $tax $slug -}}
-        {{- $items = $items | append (dict
-            "slug" $slug
-            "page" .Page
-          ) -}}
-        {{- $picked = merge $picked (dict $slug true) -}}
+  <nav class="categories">
+    <ul>
+      {{- range $slug := $order -}}
+        {{- with index $tax $slug -}}
+          <li><a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a></li>
+        {{- end -}}
       {{- end -}}
-    {{- end -}}
-  {{- end -}}
-{{- else -}}
-  {{- range $name, $term := $tax -}}
-    {{- $items = $items | append (dict "slug" $name "page" $term.Page) -}}
-  {{- end -}}
-  {{- $items = sort $items "page.Title" -}}
-{{- end -}}
-
-{{- if gt (len $items) 0 -}}
-<nav class="categories">
-  <ul>
-    {{- range $i := $items -}}
-      {{- $p := $i.page -}}
-      {{- $slug := $i.slug -}}
-      {{- $href := cond $p $p.RelPermalink (relURL (printf "/categories/%s/" $slug)) -}}
-      {{- $title := cond $p $p.Title (humanize $slug) -}}
-      <li><a href="{{ $href }}">{{ $title }}</a></li>
-    {{- end -}}
-  </ul>
-</nav>
+    </ul>
+  </nav>
 {{- end -}}
