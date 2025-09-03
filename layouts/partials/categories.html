@@ -1,15 +1,18 @@
-{{/* 严格按 params.categories.order 输出；不排序、不回退 */}}
-{{- $tax := site.Taxonomies.categories -}}
-{{- $order := site.Params.categories.order | default (slice) -}}
+{{/* ONLY render the 4 names in params.categories.order; no extra terms */}}
+{{- $order := site.Params.categories.order | default (slice "pearls" "beauty" "fashion" "nature") -}}
 
-{{- if gt (len $order) 0 -}}
-  <nav class="categories">
-    <ul>
-      {{- range $slug := $order -}}
-        {{- with index $tax $slug -}}
-          <li><a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a></li>
-        {{- end -}}
-      {{- end -}}
-    </ul>
-  </nav>
-{{- end -}}
+<nav class="categories" id="only-this-nav">
+  <ul>
+    {{- range $slug := $order -}}
+      {{- $sec  := site.GetPage (printf "section/%s" $slug) -}}   {{/* content/<slug>/_index.md */}}
+      {{- $term := index site.Taxonomies.categories $slug -}}     {{/* content/categories/<slug>/_index.md 或被使用过的分类 */}}
+      {{- $pg   := or $sec (cond $term $term.Page nil) -}}        {{/* 优先 Section，其次 Term.Page */}}
+
+      {{- $href  := cond $pg $pg.RelPermalink (relURL (printf "/%s/" $slug)) -}}
+      {{- $title := cond $pg ($pg.Title | default (humanize $slug)) (humanize $slug) -}}
+
+      <li><a href="{{ $href }}">{{ $title }}</a></li>
+    {{- end -}}
+  </ul>
+</nav>
+
