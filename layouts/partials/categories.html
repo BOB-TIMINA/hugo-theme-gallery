@@ -1,16 +1,16 @@
-{{/* layouts/partials/categories.html —— 保留主题样式，只自定义顺序 */}}
+{{/* categories.html —— 保留主题样式，只自定义顺序；不使用 set */}}
 
 {{- $tax := site.Taxonomies.categories -}}
 {{- $order := site.Params.categories.order | default (slice) -}}
 {{- $items := slice -}}
 
 {{- if gt (len $order) 0 -}}
-  {{- $seen := dict -}}             {{/* 去重后按配置顺序取 term */}}
+  {{- $picked := dict -}}                   {{/* 记录已添加的 slug，避免重复 */}}
   {{- range $slug := $order -}}
-    {{- if not (index $seen $slug) -}}
-      {{- $_ := set $seen $slug true -}}
-      {{- with index $tax $slug -}}
-        {{- $items = $items | append . -}}
+    {{- if not (isset $picked $slug) -}}    {{/* isset 检查 map 是否已有该键 */}}
+      {{- with index $tax $slug -}}         {{/* 取到对应的 term */}}
+        {{- $items = $items | append . -}}  {{/* 追加 term */}}
+        {{- $picked = merge $picked (dict $slug true) -}}  {{/* 等价 set：标记已选 */}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
